@@ -1,0 +1,34 @@
+{
+  "name": "opencode-claude-skills",
+  "version": "0.1.0",
+  "description": "Minimal OpenCode plugin that loads Claude Code skills (.claude/skills/) as OpenCode tools",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "claude-code",
+    "skills"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@opencode-ai/plugin": ">=1.2.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.5.0",
+    "typescript": "^5.8.0"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.2.0"
+  }
+}
