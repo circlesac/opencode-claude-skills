@@ -218,21 +218,36 @@ async function discoverPluginCacheSkills(): Promise<Skill[]> {
     const registry = JSON.parse(raw) as InstalledPluginsFile;
 
     const skillDirs: string[] = [];
-    for (const entries of Object.values(registry.plugins)) {
+    const rootSkills: { skillMd: string; name: string }[] = [];
+
+    for (const [key, entries] of Object.entries(registry.plugins)) {
       if (!entries.length) continue;
-      // Use the last entry (most recently installed/updated)
       const latest = entries[entries.length - 1];
       const installPath = latest.installPath;
+      const pluginName = key.replace(/@.*$/, "");
 
-      // Skills can be in <installPath>/skills/ or <installPath>/.claude/skills/
-      skillDirs.push(join(installPath, "skills"));
-      skillDirs.push(join(installPath, ".claude", "skills"));
+      // Check for SKILL.md at install root (e.g. melten-docs plugins)
+      const rootSkillMd = join(installPath, "SKILL.md");
+      if (await exists(rootSkillMd)) {
+        rootSkills.push({ skillMd: rootSkillMd, name: pluginName });
+      } else {
+        // Otherwise scan standard skill directories
+        skillDirs.push(join(installPath, "skills"));
+        skillDirs.push(join(installPath, ".claude", "skills"));
+      }
     }
 
-    const results = await Promise.all(
-      skillDirs.map((d) => loadSkillsFromDir(d, "user")),
-    );
-    return results.flat();
+    const [dirResults, ...rootResults] = await Promise.all([
+      Promise.all(skillDirs.map((d) => loadSkillsFromDir(d, "user"))),
+      ...rootSkills.map(({ skillMd, name }) =>
+        loadSkillFile(skillMd, dirname(skillMd), name, "user", ""),
+      ),
+    ]);
+
+    return [
+      ...dirResults.flat(),
+      ...(rootResults.filter(Boolean) as Skill[]),
+    ];
   } catch {
     return [];
   }
